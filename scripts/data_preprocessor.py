@@ -1,23 +1,27 @@
 import pandas as pd
 import gdown
 import os
+from IPython.display import display  # Import display for better output in notebooks
+import logging
 
 class DataPreprocessor:
-    def __init__(self, drive_link, output_dir='../data/', output_file='data.csv', logger=None):
+    def __init__(self, drive_link: str, output_dir: str = '../data/', output_file: str = 'data.csv', logger: logging.Logger = None):
         """
         Initialize the DataPreprocessor class with the Google Drive link to the dataset.
         
         Parameters:
         drive_link (str): The Google Drive shareable link to the data file.
+        output_dir (str): The directory where the data file will be saved.
         output_file (str): The local file name to save the downloaded data.
+        logger (logging.Logger): Logger for tracking events and errors.
         """
         self.drive_link = drive_link
         self.output_dir = output_dir
         self.output_file = os.path.join(self.output_dir, output_file)
-        self.data = None
-        self.logger = logger
+        self.data: pd.DataFrame = None
+        self.logger = logger if logger else logging.getLogger(__name__)
 
-    def load_data(self):
+    def load_data(self) -> pd.DataFrame:
         """
         Load the dataset from Google Drive, save it in the specified directory,
         and read it into a pandas DataFrame.
@@ -27,9 +31,8 @@ class DataPreprocessor:
         """
         try:
             # Create the output directory if it doesn't exist
-            if not os.path.exists(self.output_dir):
-                os.makedirs(self.output_dir)
-                self.logger.info(f"Created directory: {self.output_dir}")
+            os.makedirs(self.output_dir, exist_ok=True)
+            self.logger.info(f"Directory checked/created: {self.output_dir}")
             
             # Convert the Google Drive shareable link to a downloadable link
             file_id = self.drive_link.split('/')[-2]
@@ -50,3 +53,47 @@ class DataPreprocessor:
         except Exception as e:
             self.logger.error(f"Error loading data: {e}")
             raise
+    
+    def inspect(self, df: pd.DataFrame) -> None:
+        """
+        Inspect the given DataFrame for structure, completeness, and summary statistics.
+
+        Parameters:
+        - df (pd.DataFrame): The DataFrame to inspect.
+
+        Returns:
+        - None
+        """
+        if df.empty:
+            raise ValueError("The DataFrame is empty.")
+
+        try:
+            # Check and display the dimensions of the DataFrame
+            dimensions = df.shape
+            print(f"Dimensions (rows, columns): {dimensions}")
+
+            # Check and display data types of each column
+            data_types = df.dtypes
+            print("\nData Types:")
+            print(data_types)
+
+            # Check for missing values in each column
+            missing_values = df.isnull().sum()
+            if missing_values.any():
+                print("\nMissing Values:")
+                print(missing_values[missing_values > 0])
+            else:
+                print("\nNo missing values found.")
+
+            # Check and display the count of unique values for each column
+            unique_values = df.nunique()
+            print("\nUnique Values in Each Column:")
+            print(unique_values)
+
+            # Summary statistics for numeric columns
+            summary_statistics = df.describe()
+            print("\nSummary Statistics for Numeric Columns:")
+            display(summary_statistics)  # Display as a DataFrame
+
+        except Exception as e:
+            self.logger.error(f"An error occurred while inspecting the dataset: {e}")
