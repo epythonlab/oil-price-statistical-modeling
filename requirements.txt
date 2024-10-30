@@ -1,0 +1,5 @@
+pandas
+pytest
+seaborn
+matplotlib
+gdown
