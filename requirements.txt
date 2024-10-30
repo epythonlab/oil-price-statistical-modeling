@@ -3,3 +3,4 @@ pytest
 seaborn
 matplotlib
 gdown
+ipython
