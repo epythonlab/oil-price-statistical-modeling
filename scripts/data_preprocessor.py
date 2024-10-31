@@ -47,14 +47,18 @@ class DataPreprocessor:
 
             # Load data into a pandas DataFrame
             self.data = pd.read_csv(self.output_file)
+            # Convert Date to Datetime format
+            self.data['Date'] = pd.to_datetime(self.data['Date'].str.strip(),  errors='coerce')
+
             self.logger.info("Data loaded into DataFrame successfully.")
             return self.data
         
         except Exception as e:
             self.logger.error(f"Error loading data: {e}")
             raise
-    
-    def inspect(self, df: pd.DataFrame) -> None:
+
+
+    def inspect(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Inspect the given DataFrame for structure, completeness, and summary statistics.
 
@@ -62,7 +66,7 @@ class DataPreprocessor:
         - df (pd.DataFrame): The DataFrame to inspect.
 
         Returns:
-        - None
+        - pd.DataFrame: Summary statistics for numeric columns.
         """
         if df.empty:
             raise ValueError("The DataFrame is empty.")
@@ -71,29 +75,49 @@ class DataPreprocessor:
             # Check and display the dimensions of the DataFrame
             dimensions = df.shape
             print(f"Dimensions (rows, columns): {dimensions}")
+            self.logger.info(f"DataFrame dimensions: {dimensions}")
 
             # Check and display data types of each column
             data_types = df.dtypes
             print("\nData Types:")
             print(data_types)
+            self.logger.info("Displayed data types for each column.")
 
             # Check for missing values in each column
             missing_values = df.isnull().sum()
             if missing_values.any():
                 print("\nMissing Values:")
                 print(missing_values[missing_values > 0])
+                self.logger.warning("Missing values found.")
             else:
                 print("\nNo missing values found.")
+                self.logger.info("No missing values detected.")
 
             # Check and display the count of unique values for each column
             unique_values = df.nunique()
             print("\nUnique Values in Each Column:")
             print(unique_values)
+            
+            # Count the number of duplicate rows
+            duplicate_count = df.duplicated().sum()
+            print(f"Number of duplicate rows: {duplicate_count}")
+            self.logger.info(f"Duplicate rows found: {duplicate_count}")
+
+            # View duplicate rows if any
+            if duplicate_count > 0:
+                duplicates = df[df.duplicated()]
+                print("Duplicate rows:")
+                print(duplicates)
+
 
             # Summary statistics for numeric columns
-            summary_statistics = df.describe()
+            summary_statistics = df.describe(include='number')
             print("\nSummary Statistics for Numeric Columns:")
             display(summary_statistics)  # Display as a DataFrame
+            
+            # return summary_statistics  # Return for further use if needed
 
         except Exception as e:
             self.logger.error(f"An error occurred while inspecting the dataset: {e}")
+            raise
+
