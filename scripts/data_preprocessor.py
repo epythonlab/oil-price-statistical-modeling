@@ -48,7 +48,8 @@ class DataPreprocessor:
             # Load data into a pandas DataFrame
             self.data = pd.read_csv(self.output_file)
             # Convert Date to Datetime format
-            self.data['Date'] = pd.to_datetime(self.data['Date'].str.strip(),  errors='coerce')
+            self.data['Date'] = pd.to_datetime(self.data['Date'], format='mixed', errors='coerce')
+            self.data.set_index('Date', inplace=True)
 
             self.logger.info("Data loaded into DataFrame successfully.")
             return self.data
@@ -73,6 +74,7 @@ class DataPreprocessor:
 
         try:
             # Check and display the dimensions of the DataFrame
+            df = df.reset_index()
             dimensions = df.shape
             print(f"Dimensions (rows, columns): {dimensions}")
             self.logger.info(f"DataFrame dimensions: {dimensions}")
