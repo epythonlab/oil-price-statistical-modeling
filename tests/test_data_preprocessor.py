@@ -21,7 +21,11 @@ class TestDataPreprocessor(unittest.TestCase):
     def test_load_data_success(self, mock_read_csv, mock_gdown):
         # Mock the download and read_csv functions
         mock_gdown.return_value = None  # Simulate successful download
-        mock_read_csv.return_value = pd.DataFrame({'A': [1, 2], 'B': [3, 4]})
+        # Ensure DataFrame has both 'Date' and 'Price' columns
+        mock_read_csv.return_value = pd.DataFrame({
+            'Date': ['2024-01-01', '2024-01-02'],
+            'Price': [80, 82]
+        })
 
         # Call load_data
         data = self.preprocessor.load_data()
@@ -30,7 +34,7 @@ class TestDataPreprocessor(unittest.TestCase):
         mock_gdown.assert_called_once()
         mock_read_csv.assert_called_once_with(self.preprocessor.output_file)
         self.assertIsInstance(data, pd.DataFrame)
-        self.assertEqual(data.shape, (2, 2))
+        self.assertEqual(data.shape, (2, 1))  # Expect shape to be (2, 1) due to 'Date' index
 
     @patch('gdown.download')
     def test_load_data_failure(self, mock_gdown):
@@ -44,12 +48,12 @@ class TestDataPreprocessor(unittest.TestCase):
     def test_inspect(self):
         # Test with a valid DataFrame
         valid_data = {
-            'A': [1, 2, 3],
-            'B': [4.0, 5.5, None],
-            'C': ['foo', 'bar', 'baz']
+            'Date': ['2024-01-01', '2024-01-02', '2024-01-03'],
+            'Price': [80, 82, None]
         }
         valid_df = pd.DataFrame(valid_data)
-        
+        valid_df.set_index('Date', inplace=True)
+
         # Call inspect method for a valid DataFrame
         try:
             self.preprocessor.inspect(valid_df)  # Should not raise an error
